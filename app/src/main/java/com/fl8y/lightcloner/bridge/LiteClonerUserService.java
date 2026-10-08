@@ -9,6 +9,7 @@ import java.io.IOException;
 public final class LiteClonerUserService extends Binder {
     private static final String DESCRIPTOR =
             "com.fl8y.lightcloner.bridge.ILiteClonerService";
+    private static final int TRANSACTION_DESTROY = 16777114;
     private static final int TRANSACTION_START_HELPER = IBinder.FIRST_CALL_TRANSACTION;
 
     public LiteClonerUserService() {
@@ -33,9 +34,18 @@ public final class LiteClonerUserService extends Binder {
         return "'" + value.replace("'", "'\\''") + "'";
     }
 
+    private void destroy() {
+        System.exit(0);
+    }
+
     @Override
     protected boolean onTransact(int code, Parcel data, Parcel reply, int flags)
             throws RemoteException {
+        if (code == TRANSACTION_DESTROY) {
+            destroy();
+            if (reply != null) reply.writeNoException();
+            return true;
+        }
         if (code == TRANSACTION_START_HELPER) {
             data.enforceInterface(DESCRIPTOR);
             startHelper(data.readString());
