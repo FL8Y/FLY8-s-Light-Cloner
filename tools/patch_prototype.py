@@ -99,8 +99,15 @@ for path in DECODED.rglob("*"):
             lines.append(line)
         text = "\n".join(lines) + ("\n" if text.endswith("\n") else "")
 
+    if path.suffix.lower() in {".xml", ".smali"}:
+        text = update_visible_branding(text, "")
     if text != original:
         path.write_text(text, encoding="utf-8")
+
+def update_visible_branding(text, suffix):
+    # Replace product-name text in resource values and string literals.
+    text = text.replace("EysClone", "FLY8's Light Cloner")
+    return text
 
 def locate_smali(class_descriptor):
     class_path = class_descriptor[1:-1] + ".smali"
