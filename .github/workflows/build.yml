@@ -65,7 +65,7 @@ jobs:
 
       - name: Upload patch diagnostics
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: patch-diagnostics
           path: |
@@ -99,7 +99,7 @@ jobs:
           test -s dist/FLY8s-Light-Cloner.apk
 
       - name: Upload APK artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: FLY8s-Light-Cloner-private-beta
           path: dist/FLY8s-Light-Cloner.apk
