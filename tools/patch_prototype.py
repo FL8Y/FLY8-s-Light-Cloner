@@ -78,7 +78,14 @@ for path in DECODED.rglob("*"):
         continue
 
     original = text
-    text = url_re.sub("", text)
+    if path.suffix.lower() == ".xml":
+        def scrub_string(match):
+            inner = match.group(2)
+            inner = url_re.sub("", inner)
+            return match.group(1) + inner + match.group(3)
+        text = re.sub(r"(<string\\b[^>]*>)(.*?)(</string>)", scrub_string, text, flags=re.S)
+    else:
+        text = url_re.sub("", text)
 
     if path.suffix.lower() in {".xml", ".smali", ".txt", ".json", ".html", ".properties"}:
         lines = []
