@@ -64,7 +64,7 @@ tree.write(manifest, encoding="utf-8", xml_declaration=True)
 
 # Remove user-facing external links and Discord text without touching the
 # core VirtualApp/native engine.
-url_re = re.compile(r"https?://[^\s<>'\"\\]+", re.I)
+url_re = re.compile(r"https?://(?!schemas\.android\.com/)[^\s<>'"\\]+", re.I)
 discord_re = re.compile(r"discord(?:app)?\.com|discord\.gg|discord invite|discord webhook", re.I)
 
 for path in DECODED.rglob("*"):
@@ -83,7 +83,7 @@ for path in DECODED.rglob("*"):
             inner = match.group(2)
             inner = url_re.sub("", inner)
             return match.group(1) + inner + match.group(3)
-        text = re.sub(r"(<string\\b[^>]*>)(.*?)(</string>)", scrub_string, text, flags=re.S)
+        text = re.sub(r"(<string\b[^>]*>)(.*?)(</string>)", scrub_string, text, flags=re.S)
     else:
         text = url_re.sub("", text)
 
