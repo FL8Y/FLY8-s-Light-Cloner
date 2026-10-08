@@ -36,7 +36,7 @@ if target is None:
     raise RuntimeError("ActivationActivity.smali was not found")
 
 text = target.read_text(encoding="utf-8", errors="ignore")
-super_match = re.search(r"^\\.super\\s+(L[^\\n]+);$", text, re.MULTILINE)
+super_match = re.search(r"^\.super\s+(L[^\n]+);$", text, re.MULTILINE)
 if not super_match:
     raise RuntimeError("ActivationActivity superclass not found")
 super_class = super_match.group(1)
