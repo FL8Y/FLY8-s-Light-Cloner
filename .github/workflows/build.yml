@@ -77,9 +77,13 @@ jobs:
         if: steps.patch.outputs.status != '0'
         run: exit 1
 
+      - name: Remove old APK signatures
+        run: |
+          zip -d dist/FLY8s-Light-Cloner-unsigned.apk 'META-INF/*.SF' 'META-INF/*.RSA' 'META-INF/*.DSA' || true
+
       - name: Align APK
         run: |
-          zipalign -p -f 4             dist/FLY8s-Light-Cloner-unsigned.apk             dist/FLY8s-Light-Cloner-aligned.apk
+          "$ANDROID_HOME/build-tools/36.0.0/zipalign" -p -f 4             dist/FLY8s-Light-Cloner-unsigned.apk             dist/FLY8s-Light-Cloner-aligned.apk
 
       - name: Create beta signing key
         run: |
@@ -87,11 +91,11 @@ jobs:
 
       - name: Sign APK
         run: |
-          apksigner sign             --ks beta-signing.jks             --ks-pass pass:changeit             --key-pass pass:changeit             --out dist/FLY8s-Light-Cloner.apk             dist/FLY8s-Light-Cloner-aligned.apk
+          "$ANDROID_HOME/build-tools/36.0.0/apksigner" sign             --ks beta-signing.jks             --ks-pass pass:changeit             --key-pass pass:changeit             --out dist/FLY8s-Light-Cloner.apk             dist/FLY8s-Light-Cloner-aligned.apk
 
       - name: Verify signed APK
         run: |
-          apksigner verify --verbose dist/FLY8s-Light-Cloner.apk
+          "$ANDROID_HOME/build-tools/36.0.0/apksigner" verify --verbose dist/FLY8s-Light-Cloner.apk
           test -s dist/FLY8s-Light-Cloner.apk
 
       - name: Upload APK artifact
