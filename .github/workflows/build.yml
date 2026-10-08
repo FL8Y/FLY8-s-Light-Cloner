@@ -48,9 +48,18 @@ jobs:
       - name: Build Shizuku bridge
         run: gradle :app:assembleRelease --stacktrace
 
-      - name: Download binary ManifestEditor
+      - name: Build current ManifestEditor
         run: |
-          curl -L --fail --retry 4             -o tools/ManifestEditor-2.0.jar             https://github.com/WindySha/ManifestEditor/releases/download/v2.0/ManifestEditor-2.0.jar
+          rm -rf /tmp/ManifestEditor
+          git clone --depth 1 https://github.com/WindySha/ManifestEditor.git /tmp/ManifestEditor
+          cd /tmp/ManifestEditor
+          git checkout ee68565503bffca9fa170ea5a055574d7f60b217
+          find lib/src/main/java -name '*.java' -print > /tmp/manifest-sources.txt
+          mkdir -p /tmp/manifest-classes
+          javac -encoding UTF-8 -source 8 -target 8             -d /tmp/manifest-classes @/tmp/manifest-sources.txt
+          cp -R lib/src/main/assets /tmp/manifest-classes/
+          cd /home/runner/work/FLY8-s-Light-Cloner/FLY8-s-Light-Cloner
+          jar cfe tools/ManifestEditor-current.jar             com.wind.meditor.ManifestEditorMain             -C /tmp/manifest-classes .
 
       - name: Read prototype package id
         id: package
@@ -63,7 +72,7 @@ jobs:
       - name: Patch binary manifest
         run: |
           mkdir -p dist
-          javac -cp tools/ManifestEditor-2.0.jar tools/ManifestPatch.java
+          javac -cp tools/ManifestEditor-current.jar tools/ManifestPatch.java
           java -cp tools/ManifestEditor-2.0.jar:tools ManifestPatch             vendor/EysClone-1.3.59.apk             dist/FLY8s-Light-Cloner-manifest.apk             "${{ steps.package.outputs.name }}"
           test -s dist/FLY8s-Light-Cloner-manifest.apk
 
