@@ -79,6 +79,9 @@ for path in DECODED.rglob("*"):
 
     original = text
     if path.suffix.lower() == ".xml":
+        # Apktool may emit empty default namespace declarations in legacy
+        # support-library animation resources; aapt2 rejects those.
+        text = text.replace(' xmlns=""', '')
         def scrub_string(match):
             inner = match.group(2)
             inner = url_re.sub("", inner)
