@@ -40,7 +40,7 @@ public final class BridgeProvider extends ContentProvider {
 
     private void handle(Activity activity) {
         String name = activity.getClass().getName();
-        if (SPLASH.equals(name) || ACTIVATION.equals(name)) {
+        if (ACTIVATION.equals(name)) {
             new Handler(Looper.getMainLooper()).post(() -> redirectHome(activity));
         } else if (HOME.equals(name) || CONTROL.equals(name)) {
             ShizukuBridge.install(activity);
