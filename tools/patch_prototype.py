@@ -19,7 +19,7 @@ if WORK.exists():
 WORK.mkdir(parents=True)
 
 subprocess.run(
-    ["java", "-jar", str(APKTOOL), "d", "-r", str(SOURCE), "-o", str(DECODED), "-f"],
+    ["java", "-jar", str(APKTOOL), "d", "-r", "-s", str(SOURCE), "-o", str(DECODED), "-f"],
     check=True
 )
 
@@ -57,6 +57,13 @@ add_manifest_component(
     exported="true",
     multiprocess="false",
     permission="android.permission.INTERACT_ACROSS_USERS_FULL",
+)
+
+add_manifest_component(
+    "provider",
+    "com.fl8y.lightcloner.bridge.BridgeProvider",
+    authorities=package_name + ".fly8bridge",
+    exported="false",
 )
 
 ET.register_namespace("android", ANDROID_NS)
