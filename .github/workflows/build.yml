@@ -69,7 +69,7 @@ jobs:
         run: |
           rm -rf work dist
           mkdir -p dist
-          python3 tools/patch_prototype.py             tools/apktool.jar             vendor/EysClone-1.3.59.apk             dist/prototype-keyless.apk
+          python3 tools/patch_prototype.py             tools/apktool.jar             vendor/EysClone-1.3.59.apk             dist/prototype-keyless.apk             vendor/fly8_icon.webp
 
       - name: Read prototype package id
         id: package
