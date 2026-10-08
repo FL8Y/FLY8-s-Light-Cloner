@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <application android:theme="@android:style/Theme.DeviceDefault.NoActionBar" android:label="FLY8's Light Cloner">
+        <activity android:name=".BridgeActivity" android:exported="true" />
+        <provider
+            android:name="rikka.shizuku.ShizukuProvider"
+            android:authorities="${applicationId}.shizuku"
+            android:exported="true"
+            android:multiprocess="false"
+            android:permission="android.permission.INTERACT_ACROSS_USERS_FULL" />
+        <service android:name=".LiteClonerUserService" android:exported="false" />
+    </application>
+</manifest>
