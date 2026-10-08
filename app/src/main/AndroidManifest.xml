@@ -8,6 +8,5 @@
             android:exported="true"
             android:multiprocess="false"
             android:permission="android.permission.INTERACT_ACROSS_USERS_FULL" />
-        <service android:name=".LiteClonerUserService" android:exported="false" />
     </application>
 </manifest>
