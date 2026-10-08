@@ -1,10 +1,20 @@
 package com.fl8y.lightcloner.bridge;
 
+import android.os.Binder;
+import android.os.IBinder;
+import android.os.Parcel;
 import android.os.RemoteException;
 import java.io.IOException;
 
-public final class LiteClonerUserService extends ILiteClonerService.Stub {
-    @Override
+public final class LiteClonerUserService extends Binder {
+    private static final String DESCRIPTOR =
+            "com.fl8y.lightcloner.bridge.ILiteClonerService";
+    private static final int TRANSACTION_START_HELPER = IBinder.FIRST_CALL_TRANSACTION;
+
+    public LiteClonerUserService() {
+        attachInterface(null, DESCRIPTOR);
+    }
+
     public void startHelper(String packageName) throws RemoteException {
         String cmd =
             "APK=$(pm path " + shellQuote(packageName) +
@@ -24,7 +34,14 @@ public final class LiteClonerUserService extends ILiteClonerService.Stub {
     }
 
     @Override
-    public void destroy() {
-        System.exit(0);
+    protected boolean onTransact(int code, Parcel data, Parcel reply, int flags)
+            throws RemoteException {
+        if (code == TRANSACTION_START_HELPER) {
+            data.enforceInterface(DESCRIPTOR);
+            startHelper(data.readString());
+            reply.writeNoException();
+            return true;
+        }
+        return super.onTransact(code, data, reply, flags);
     }
 }
