@@ -53,9 +53,29 @@ jobs:
           curl -L --fail --retry 4             -o apktool.jar             https://github.com/iBotPeaches/Apktool/releases/download/v3.0.3/apktool_3.0.3.jar
 
       - name: Patch and rebuild prototype
+        id: patch
+        continue-on-error: true
         run: |
           mkdir -p dist
-          python3 tools/patch_prototype.py             apktool.jar             vendor/EysClone-1.3.59.apk             dist/FLY8s-Light-Cloner-unsigned.apk             app/build/outputs/apk/release/app-release-unsigned.apk
+          set +e
+          python3 tools/patch_prototype.py apktool.jar vendor/EysClone-1.3.59.apk dist/FLY8s-Light-Cloner-unsigned.apk app/build/outputs/apk/release/app-release-unsigned.apk 2>&1 | tee patch.log
+          status=\${PIPESTATUS[0]}
+          echo "status=\${status}" >> "\${GITHUB_OUTPUT}"
+          exit 0
+
+      - name: Upload patch diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: patch-diagnostics
+          path: |
+            patch.log
+            work/remnants.txt
+          if-no-files-found: ignore
+
+      - name: Fail if patch failed
+        if: steps.patch.outputs.status != '0'
+        run: exit 1
 
       - name: Align APK
         run: |
