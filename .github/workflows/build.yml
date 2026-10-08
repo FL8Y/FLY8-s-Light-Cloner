@@ -40,7 +40,7 @@ jobs:
       - name: Obtain prototype APK
         run: |
           mkdir -p vendor
-          if [ ! -f vendor/EysClone-1.3.59.apk ]; then
+          if [ ! -s vendor/EysClone-1.3.59.apk ]; then
             curl -L --fail --retry 4               -o vendor/EysClone-1.3.59.apk               https://raw.githubusercontent.com/FL8Y/LiteCloner/main/vendor/EysClone-1.3.59.apk
           fi
           test -s vendor/EysClone-1.3.59.apk
@@ -48,38 +48,37 @@ jobs:
       - name: Build Shizuku bridge
         run: gradle :app:assembleRelease --stacktrace
 
-      - name: Download Apktool
+      - name: Download binary ManifestEditor
         run: |
-          curl -L --fail --retry 4             -o apktool.jar             https://github.com/iBotPeaches/Apktool/releases/download/v3.0.3/apktool_3.0.3.jar
+          curl -L --fail --retry 4             -o tools/ManifestEditor-2.0.jar             https://github.com/WindySha/ManifestEditor/releases/download/v2.0/ManifestEditor-2.0.jar
 
-      - name: Patch and rebuild prototype
-        id: patch
-        continue-on-error: true
+      - name: Read prototype package id
+        id: package
+        run: |
+          PKG=$("$ANDROID_HOME/build-tools/36.0.0/aapt2" dump badging             vendor/EysClone-1.3.59.apk             | sed -n "s/package: name='\\([^']*\\)'.*/\\1/p"             | head -n 1)
+          test -n "$PKG"
+          echo "name=$PKG" >> "$GITHUB_OUTPUT"
+          echo "Prototype package: $PKG"
+
+      - name: Patch binary manifest
         run: |
           mkdir -p dist
-          set +e
-          python3 tools/patch_prototype.py apktool.jar vendor/EysClone-1.3.59.apk dist/FLY8s-Light-Cloner-unsigned.apk app/build/outputs/apk/release/app-release-unsigned.apk 2>&1 | tee patch.log
-          status=\${PIPESTATUS[0]}
-          echo "status=\${status}" >> "\${GITHUB_OUTPUT}"
-          exit 0
+          javac -cp tools/ManifestEditor-2.0.jar tools/ManifestPatch.java
+          java -cp tools/ManifestEditor-2.0.jar:tools ManifestPatch             vendor/EysClone-1.3.59.apk             dist/FLY8s-Light-Cloner-manifest.apk             "${{ steps.package.outputs.name }}"
+          test -s dist/FLY8s-Light-Cloner-manifest.apk
 
-      - name: Upload patch diagnostics
-        if: always()
-        uses: actions/upload-artifact@v7
-        with:
-          name: patch-diagnostics
-          path: |
-            patch.log
-            work/remnants.txt
-          if-no-files-found: ignore
-
-      - name: Fail if patch failed
-        if: steps.patch.outputs.status != '0'
-        run: exit 1
-
-      - name: Remove old APK signatures
+      - name: Add Shizuku bridge classes
         run: |
-          zip -d dist/FLY8s-Light-Cloner-unsigned.apk 'META-INF/*.SF' 'META-INF/*.RSA' 'META-INF/*.DSA' || true
+          unzip -p app/build/outputs/apk/release/app-release-unsigned.apk classes.dex > dist/classes2.dex
+          test -s dist/classes2.dex
+          cp dist/FLY8s-Light-Cloner-manifest.apk dist/FLY8s-Light-Cloner-unsigned.apk
+          zip -q -j dist/FLY8s-Light-Cloner-unsigned.apk dist/classes2.dex
+
+      - name: Verify APK structure
+        run: |
+          test -s dist/FLY8s-Light-Cloner-unsigned.apk
+          "$ANDROID_HOME/build-tools/36.0.0/aapt2" dump badging             dist/FLY8s-Light-Cloner-unsigned.apk | head -n 8
+          unzip -l dist/FLY8s-Light-Cloner-unsigned.apk | grep -E             'AndroidManifest.xml|resources.arsc|classes.dex|classes2.dex'
 
       - name: Align APK
         run: |
@@ -95,7 +94,7 @@ jobs:
 
       - name: Verify signed APK
         run: |
-          "$ANDROID_HOME/build-tools/36.0.0/apksigner" verify --verbose dist/FLY8s-Light-Cloner.apk
+          "$ANDROID_HOME/build-tools/36.0.0/apksigner" verify --verbose             dist/FLY8s-Light-Cloner.apk
           test -s dist/FLY8s-Light-Cloner.apk
 
       - name: Upload APK artifact
