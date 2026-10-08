@@ -8,6 +8,7 @@ import android.graphics.drawable.GradientDrawable;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Looper;
+import android.os.Parcel;
 import android.view.Gravity;
 import android.widget.Button;
 import android.widget.FrameLayout;
@@ -17,7 +18,7 @@ import rikka.shizuku.Shizuku;
 
 public final class ShizukuBridge {
     private static final int REQUEST_CODE = 7311;
-    private static ILiteClonerService service;
+    private static IBinder serviceBinder;
 
     private ShizukuBridge() {}
 
@@ -70,9 +71,9 @@ public final class ShizukuBridge {
     }
 
     private static void bindAndStart(Activity activity) {
-        if (service != null) {
+        if (serviceBinder != null && serviceBinder.pingBinder()) {
             try {
-                service.startHelper(activity.getPackageName());
+                ParcelPair.callStartHelper(serviceBinder, activity.getPackageName());
                 Toast.makeText(activity, "Shizuku controls started", Toast.LENGTH_SHORT).show();
                 return;
             } catch (Throwable ignored) {}
@@ -89,9 +90,9 @@ public final class ShizukuBridge {
         Shizuku.bindUserService(args, new Shizuku.ServiceConnection() {
             @Override
             public void onServiceConnected(ComponentName name, IBinder binder) {
-                service = ILiteClonerService.Stub.asInterface(binder);
+                serviceBinder = binder;
                 try {
-                    service.startHelper(activity.getPackageName());
+                    ParcelPair.callStartHelper(serviceBinder, activity.getPackageName());
                     Toast.makeText(activity, "Shizuku controls started", Toast.LENGTH_SHORT).show();
                 } catch (Throwable t) {
                     Toast.makeText(activity, "Shizuku helper failed", Toast.LENGTH_LONG).show();
@@ -100,8 +101,24 @@ public final class ShizukuBridge {
 
             @Override
             public void onServiceDisconnected(ComponentName name) {
-                service = null;
+                serviceBinder = null;
             }
         });
+    }
+
+    private static final class ParcelPair {
+        static void callStartHelper(IBinder binder, String packageName) throws RemoteException {
+            Parcel data = Parcel.obtain();
+            Parcel reply = Parcel.obtain();
+            try {
+                data.writeInterfaceToken("com.fl8y.lightcloner.bridge.ILiteClonerService");
+                data.writeString(packageName);
+                binder.transact(IBinder.FIRST_CALL_TRANSACTION, data, reply, 0);
+                reply.readException();
+            } finally {
+                reply.recycle();
+                data.recycle();
+            }
+        }
     }
 }
