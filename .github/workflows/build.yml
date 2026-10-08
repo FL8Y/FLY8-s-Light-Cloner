@@ -9,6 +9,10 @@ on:
 permissions:
   contents: write
 
+concurrency:
+  group: fly8-light-cloner-build
+  cancel-in-progress: true
+
 jobs:
   build:
     runs-on: ubuntu-24.04
@@ -51,7 +55,7 @@ jobs:
       - name: Patch and rebuild prototype
         run: |
           mkdir -p dist
-          python3 tools/patch_prototype.py             apktool.jar             vendor/EysClone-1.3.59.apk             dist/FLY8s-Light-Cloner-unsigned.apk             app/build/outputs/apk/release/app-release.apk
+          python3 tools/patch_prototype.py             apktool.jar             vendor/EysClone-1.3.59.apk             dist/FLY8s-Light-Cloner-unsigned.apk             app/build/outputs/apk/release/app-release-unsigned.apk
 
       - name: Align APK
         run: |
