@@ -94,10 +94,7 @@ public final class ManifestPatch {
                     @Override
                     public void attr(String ans, String aname, int resId, int type, Object value) {
                         if (ANDROID.equals(ans) &&
-                                ("icon".equals(aname) ||
-                                 "roundIcon".equals(aname) ||
-                                 "logo".equals(aname) ||
-                                 "banner".equals(aname))) {
+                                ("logo".equals(aname) || "banner".equals(aname))) {
                             return;
                         }
 
