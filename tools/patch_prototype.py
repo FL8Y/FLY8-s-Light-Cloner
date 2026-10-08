@@ -19,7 +19,7 @@ if WORK.exists():
 WORK.mkdir(parents=True)
 
 subprocess.run(
-    ["java", "-jar", str(APKTOOL), "d", str(SOURCE), "-o", str(DECODED), "-f"],
+    ["java", "-jar", str(APKTOOL), "d", "-r", str(SOURCE), "-o", str(DECODED), "-f"],
     check=True
 )
 
@@ -62,57 +62,7 @@ add_manifest_component(
 ET.register_namespace("android", ANDROID_NS)
 tree.write(manifest, encoding="utf-8", xml_declaration=True)
 
-# Remove user-facing external links and Discord text without touching the
-# core VirtualApp/native engine.
-url_re = re.compile(r"https?://(?!schemas\.android\.com/)[^\s<>'"\\]+", re.I)
-discord_re = re.compile(r"discord(?:app)?\.com|discord\.gg|discord invite|discord webhook", re.I)
-
-for path in DECODED.rglob("*"):
-    if not path.is_file():
-        continue
-    if path.suffix.lower() not in {".xml", ".smali", ".txt", ".json", ".html", ".properties"}:
-        continue
-    try:
-        text = path.read_text(encoding="utf-8", errors="ignore")
-    except Exception:
-        continue
-
-    original = text
-    if path.suffix.lower() == ".xml":
-        # Apktool may emit empty default namespace declarations in legacy
-        # support-library animation resources; aapt2 rejects those.
-        text = text.replace(' xmlns=""', '')
-        def scrub_string(match):
-            inner = match.group(2)
-            inner = url_re.sub("", inner)
-            return match.group(1) + inner + match.group(3)
-        text = re.sub(r"(<string\b[^>]*>)(.*?)(</string>)", scrub_string, text, flags=re.S)
-    else:
-        text = url_re.sub("", text)
-
-    if path.suffix.lower() in {".xml", ".smali", ".txt", ".json", ".html", ".properties"}:
-        lines = []
-        for line in text.splitlines():
-            if discord_re.search(line):
-                # Keep XML structure intact; blank only user-facing textual value lines.
-                if path.suffix.lower() == ".xml" and "<string" in line and "</string>" in line:
-                    line = re.sub(r">.*?</string>", "></string>", line, count=1, flags=re.S)
-                else:
-                    line = discord_re.sub("", line)
-            lines.append(line)
-        text = "\n".join(lines) + ("\n" if text.endswith("\n") else "")
-
-    if path.suffix.lower() in {".xml", ".smali"}:
-        text = update_visible_branding(text, "")
-    if text != original:
-        path.write_text(text, encoding="utf-8")
-
-def update_visible_branding(text, suffix):
-    # Replace product-name text in resource values and string literals.
-    text = text.replace("EysClone", "FLY8's Light Cloner")
-    return text
-
-def locate_smali(class_descriptor):
+# Preserve prototype resources verbatim for 1:1 UI compatibility.\n\ndef locate_smali(class_descriptor):
     class_path = class_descriptor[1:-1] + ".smali"
     for rootdir in DECODED.glob("smali*"):
         candidate = rootdir / class_path
