@@ -43,8 +43,9 @@ public final class BridgeProvider extends ContentProvider {
 
     private void handle(Activity activity) {
         String name = activity.getClass().getName();
-        scrubDiscordUi(activity);
-        if (ACTIVATION.equals(name)) {
+        scrubBetaUi(activity);
+        String lowerName = name.toLowerCase();
+        if (ACTIVATION.equals(name) || lowerName.contains(".license.") || lowerName.contains("activation")) {
             new Handler(Looper.getMainLooper()).postDelayed(() -> redirectHome(activity), 120);
         } else if (HOME.equals(name) || CONTROL.equals(name)) {
             ShizukuBridge.install(activity);
@@ -55,7 +56,7 @@ public final class BridgeProvider extends ContentProvider {
         }
     }
 
-    private void scrubDiscordUi(Activity activity) {
+    private void scrubBetaUi(Activity activity) {
         try {
             View root = activity.findViewById(android.R.id.content);
             scrubView(root);
@@ -70,7 +71,15 @@ public final class BridgeProvider extends ContentProvider {
             String a = text == null ? "" : text.toString();
             String b = desc == null ? "" : desc.toString();
             String joined = (a + " " + b).toLowerCase();
-            if (joined.contains("discord") || joined.contains("webhook")) {
+            if (joined.contains("discord") ||
+                joined.contains("webhook") ||
+                joined.contains("enter license key") ||
+                joined.contains("activate your key") ||
+                joined.contains("activate your license") ||
+                joined.contains("change key") ||
+                joined.contains("license key") ||
+                joined.contains("app license") ||
+                joined.contains("license active")) {
                 view.setVisibility(View.GONE);
                 return;
             }
