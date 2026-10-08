@@ -13,7 +13,11 @@ import android.os.Handler;
 import android.os.Looper;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.TextView;
+import android.widget.CompoundButton;
+import android.content.res.ColorStateList;
+import android.graphics.Color;
 
 public final class BridgeProvider extends ContentProvider {
     private static final String SPLASH = "io.virtualapp.splash.SplashActivity";
@@ -43,6 +47,7 @@ public final class BridgeProvider extends ContentProvider {
 
     private void handle(Activity activity) {
         String name = activity.getClass().getName();
+        applyFly8Chrome(activity);
         scrubBetaUi(activity);
         String lowerName = name.toLowerCase();
         if (ACTIVATION.equals(name) || lowerName.contains(".license.") || lowerName.contains("activation")) {
@@ -53,6 +58,29 @@ public final class BridgeProvider extends ContentProvider {
         String data = activity.getIntent() == null ? null : String.valueOf(activity.getIntent().getData());
         if (data != null && data.toLowerCase().contains("discord")) {
             try { activity.finish(); } catch (Throwable ignored) {}
+        }
+    }
+
+
+    private void applyFly8Chrome(Activity activity) {
+        try {
+            activity.getWindow().setStatusBarColor(Color.rgb(6, 25, 38));
+            activity.getWindow().setNavigationBarColor(Color.rgb(4, 16, 25));
+            View root = activity.findViewById(android.R.id.content);
+            tintFly8Controls(root);
+        } catch (Throwable ignored) {}
+    }
+
+    private void tintFly8Controls(View view) {
+        if (view == null) return;
+        if (view instanceof Button) {
+            ((Button) view).setBackgroundTintList(ColorStateList.valueOf(Color.rgb(39, 170, 205)));
+        } else if (view instanceof CompoundButton) {
+            ((CompoundButton) view).setButtonTintList(ColorStateList.valueOf(Color.rgb(39, 170, 205)));
+        }
+        if (view instanceof ViewGroup) {
+            ViewGroup group = (ViewGroup) view;
+            for (int i = 0; i < group.getChildCount(); i++) tintFly8Controls(group.getChildAt(i));
         }
     }
 
