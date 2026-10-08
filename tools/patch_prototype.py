@@ -135,10 +135,6 @@ inject_after_registers(
     "invoke-static {p0}, Lcom/fl8y/lightcloner/bridge/BetaBootstrap;->onSplash(Landroid/app/Activity;)V",
 )
 inject_after_registers(
-    locate_smali("Lio/virtualapp/license/ActivationActivity;"),
-    "invoke-static {p0}, Lcom/fl8y/lightcloner/bridge/BetaBootstrap;->onActivation(Landroid/app/Activity;)V",
-)
-inject_after_registers(
     locate_smali("Lio/virtualapp/home/NewHomeActivity;"),
     "invoke-static {p0}, Lcom/fl8y/lightcloner/bridge/ShizukuBridge;->install(Landroid/app/Activity;)V",
 )
@@ -156,6 +152,8 @@ for rootdir in DECODED.glob("smali*"):
     if not license_dir.exists():
         continue
     for smali_file in license_dir.rglob("*.smali"):
+        if smali_file.name == "ActivationActivity.smali":
+            continue
         text = smali_file.read_text(encoding="utf-8", errors="ignore")
         chunks = re.split(r"(?m)(?=^\.method\b)", text)
         changed = False
