@@ -11,6 +11,9 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.TextView;
 
 public final class BridgeProvider extends ContentProvider {
     private static final String SPLASH = "io.virtualapp.splash.SplashActivity";
@@ -40,10 +43,43 @@ public final class BridgeProvider extends ContentProvider {
 
     private void handle(Activity activity) {
         String name = activity.getClass().getName();
+        scrubDiscordUi(activity);
         if (ACTIVATION.equals(name)) {
-            new Handler(Looper.getMainLooper()).post(() -> redirectHome(activity));
+            new Handler(Looper.getMainLooper()).postDelayed(() -> redirectHome(activity), 120);
         } else if (HOME.equals(name) || CONTROL.equals(name)) {
             ShizukuBridge.install(activity);
+        }
+        String data = activity.getIntent() == null ? null : String.valueOf(activity.getIntent().getData());
+        if (data != null && data.toLowerCase().contains("discord")) {
+            try { activity.finish(); } catch (Throwable ignored) {}
+        }
+    }
+
+    private void scrubDiscordUi(Activity activity) {
+        try {
+            View root = activity.findViewById(android.R.id.content);
+            scrubView(root);
+        } catch (Throwable ignored) {}
+    }
+
+    private void scrubView(View view) {
+        if (view == null) return;
+        if (view instanceof TextView) {
+            CharSequence text = ((TextView) view).getText();
+            CharSequence desc = view.getContentDescription();
+            String a = text == null ? "" : text.toString();
+            String b = desc == null ? "" : desc.toString();
+            String joined = (a + " " + b).toLowerCase();
+            if (joined.contains("discord") || joined.contains("webhook")) {
+                view.setVisibility(View.GONE);
+                return;
+            }
+        }
+        if (view instanceof ViewGroup) {
+            ViewGroup group = (ViewGroup) view;
+            for (int i = 0; i < group.getChildCount(); i++) {
+                scrubView(group.getChildAt(i));
+            }
         }
     }
 
