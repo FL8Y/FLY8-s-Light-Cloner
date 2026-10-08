@@ -1,0 +1,85 @@
+name: Build FLY8's Light Cloner Private Beta
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main ]
+    tags: [ 'v*' ]
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v4
+        with:
+          packages: 'platform-tools platforms;android-36 build-tools;36.0.0'
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v6
+        with:
+          gradle-version: '9.5'
+
+      - name: Obtain prototype APK
+        run: |
+          mkdir -p vendor
+          if [ ! -f vendor/EysClone-1.3.59.apk ]; then
+            curl -L --fail --retry 4               -o vendor/EysClone-1.3.59.apk               https://raw.githubusercontent.com/FL8Y/LiteCloner/main/vendor/EysClone-1.3.59.apk
+          fi
+          test -s vendor/EysClone-1.3.59.apk
+
+      - name: Build Shizuku bridge
+        run: gradle :app:assembleRelease --stacktrace
+
+      - name: Download Apktool
+        run: |
+          curl -L --fail --retry 4             -o apktool.jar             https://github.com/iBotPeaches/Apktool/releases/download/v3.0.3/apktool_3.0.3.jar
+
+      - name: Patch and rebuild prototype
+        run: |
+          mkdir -p dist
+          python3 tools/patch_prototype.py             apktool.jar             vendor/EysClone-1.3.59.apk             dist/FLY8s-Light-Cloner-unsigned.apk             app/build/outputs/apk/release/app-release.apk
+
+      - name: Align APK
+        run: |
+          zipalign -p -f 4             dist/FLY8s-Light-Cloner-unsigned.apk             dist/FLY8s-Light-Cloner-aligned.apk
+
+      - name: Create beta signing key
+        run: |
+          keytool -genkeypair             -keystore beta-signing.jks             -storepass changeit             -keypass changeit             -alias fly8-beta             -keyalg RSA             -keysize 2048             -validity 3650             -dname "CN=FLY8s Light Cloner,O=FLY8,C=PH"
+
+      - name: Sign APK
+        run: |
+          apksigner sign             --ks beta-signing.jks             --ks-pass pass:changeit             --key-pass pass:changeit             --out dist/FLY8s-Light-Cloner.apk             dist/FLY8s-Light-Cloner-aligned.apk
+
+      - name: Verify signed APK
+        run: |
+          apksigner verify --verbose dist/FLY8s-Light-Cloner.apk
+          test -s dist/FLY8s-Light-Cloner.apk
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: FLY8s-Light-Cloner-private-beta
+          path: dist/FLY8s-Light-Cloner.apk
+          if-no-files-found: error
+
+      - name: Publish tagged release
+        if: startsWith(github.ref, 'refs/tags/v')
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "${{ github.ref_name }}"             dist/FLY8s-Light-Cloner.apk             --generate-notes             --title "FLY8's Light Cloner ${{ github.ref_name }}"
