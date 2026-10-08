@@ -36,6 +36,10 @@ if target is None:
     raise RuntimeError("ActivationActivity.smali was not found")
 
 text = target.read_text(encoding="utf-8", errors="ignore")
+super_match = re.search(r"^\\.super\\s+(L[^\\n]+);$", text, re.MULTILINE)
+if not super_match:
+    raise RuntimeError("ActivationActivity superclass not found")
+super_class = super_match.group(1)
 pattern = re.compile(
     r"(?ms)^(\.method\s+[^\n]*onCreate\(Landroid/os/Bundle;\)V\n)"
     r".*?^\.end method\s*$"
@@ -47,7 +51,7 @@ if not match:
 replacement = (
     match.group(1)
     + "    .locals 2\n"
-    + "    invoke-super {p0, p1}, Landroid/app/Activity;->onCreate(Landroid/os/Bundle;)V\n"
+    + f"    invoke-super {{p0, p1}}, {super_class}->onCreate(Landroid/os/Bundle;)V\n"
     + "    const-class v0, Lio/virtualapp/home/NewHomeActivity;\n"
     + "    new-instance v1, Landroid/content/Intent;\n"
     + "    invoke-direct {v1, p0, v0}, Landroid/content/Intent;-><init>(Landroid/content/Context;Ljava/lang/Class;)V\n"
