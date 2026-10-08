@@ -167,7 +167,7 @@ for rootdir in DECODED.glob("smali*"):
         out = []
         for chunk in chunks:
             header = re.match(r"(?s)^\.method[^\n]+", chunk)
-            if not header or " Z" not in header.group(0):
+            if not header or not header.group(0).rstrip().endswith(")Z"):
                 out.append(chunk)
                 continue
             if not re.search(r"(?i)license|activat|subscription|allow|valid|verif", chunk):
