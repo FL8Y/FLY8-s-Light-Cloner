@@ -73,7 +73,7 @@ jobs:
         run: |
           mkdir -p dist
           javac -cp tools/ManifestEditor-current.jar tools/ManifestPatch.java
-          java -cp tools/ManifestEditor-2.0.jar:tools ManifestPatch             vendor/EysClone-1.3.59.apk             dist/FLY8s-Light-Cloner-manifest.apk             "${{ steps.package.outputs.name }}"
+          java -cp tools/ManifestEditor-current.jar:tools ManifestPatch             vendor/EysClone-1.3.59.apk             dist/FLY8s-Light-Cloner-manifest.apk             "${{ steps.package.outputs.name }}"
           test -s dist/FLY8s-Light-Cloner-manifest.apk
 
       - name: Add Shizuku bridge classes
