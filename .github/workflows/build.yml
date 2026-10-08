@@ -61,6 +61,16 @@ jobs:
           cd /home/runner/work/FLY8-s-Light-Cloner/FLY8-s-Light-Cloner
           jar cfe tools/ManifestEditor-current.jar             com.wind.meditor.ManifestEditorMain             -C /tmp/manifest-classes .
 
+      - name: Download Apktool
+        run: |
+          curl -L --fail --retry 4             -o tools/apktool.jar             https://github.com/iBotPeaches/Apktool/releases/download/v3.0.3/apktool_3.0.3.jar
+
+      - name: Patch key screen in prototype
+        run: |
+          rm -rf work dist
+          mkdir -p dist
+          python3 tools/patch_prototype.py             tools/apktool.jar             vendor/EysClone-1.3.59.apk             dist/prototype-keyless.apk
+
       - name: Read prototype package id
         id: package
         run: |
@@ -73,7 +83,7 @@ jobs:
         run: |
           mkdir -p dist
           javac -cp tools/ManifestEditor-current.jar tools/ManifestPatch.java
-          java -cp tools/ManifestEditor-current.jar:tools ManifestPatch             vendor/EysClone-1.3.59.apk             dist/FLY8s-Light-Cloner-manifest.apk             "${{ steps.package.outputs.name }}"
+          java -cp tools/ManifestEditor-current.jar:tools ManifestPatch             dist/prototype-keyless.apk             dist/FLY8s-Light-Cloner-manifest.apk             "${{ steps.package.outputs.name }}"
           test -s dist/FLY8s-Light-Cloner-manifest.apk
 
       - name: Add Shizuku bridge classes
