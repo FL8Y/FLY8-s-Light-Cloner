@@ -39,7 +39,7 @@ text = target.read_text(encoding="utf-8", errors="ignore")
 super_match = re.search(r"^\.super\s+(L[^\n]+);$", text, re.MULTILINE)
 if not super_match:
     raise RuntimeError("ActivationActivity superclass not found")
-super_class = super_match.group(1)
+super_class = super_match.group(1) + ";"
 pattern = re.compile(
     r"(?ms)^(\.method\s+[^\n]*onCreate\(Landroid/os/Bundle;\)V\n)"
     r".*?^\.end method\s*$"
