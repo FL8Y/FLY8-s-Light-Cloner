@@ -58,11 +58,6 @@ add_manifest_component(
     multiprocess="false",
     permission="android.permission.INTERACT_ACROSS_USERS_FULL",
 )
-add_manifest_component(
-    "service",
-    "com.fl8y.lightcloner.bridge.LiteClonerUserService",
-    exported="false",
-)
 
 ET.register_namespace("android", ANDROID_NS)
 tree.write(manifest, encoding="utf-8", xml_declaration=True)
