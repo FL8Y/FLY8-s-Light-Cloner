@@ -31,7 +31,7 @@ jobs:
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v6
         with:
-          gradle-version: '9.5'
+          gradle-version: '9.5.1'
 
       - name: Obtain prototype APK
         run: |
