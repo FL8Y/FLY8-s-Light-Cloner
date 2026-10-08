@@ -2,6 +2,7 @@ package com.fl8y.lightcloner.bridge;
 
 import android.app.Activity;
 import android.content.ComponentName;
+import android.content.ServiceConnection;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.graphics.drawable.GradientDrawable;
@@ -9,6 +10,7 @@ import android.os.Handler;
 import android.os.IBinder;
 import android.os.Looper;
 import android.os.Parcel;
+import android.os.RemoteException;
 import android.view.Gravity;
 import android.widget.Button;
 import android.widget.FrameLayout;
@@ -87,7 +89,7 @@ public final class ShizukuBridge {
          .version(1)
          .tag("fly8-light-cloner");
 
-        Shizuku.bindUserService(args, new Shizuku.ServiceConnection() {
+        Shizuku.bindUserService(args, new ServiceConnection() {
             @Override
             public void onServiceConnected(ComponentName name, IBinder binder) {
                 serviceBinder = binder;
